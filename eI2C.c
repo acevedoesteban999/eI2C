@@ -13,9 +13,18 @@ esp_err_t i2c_master_init(int SDA, int SCL, int I2C_Port)
         .master.clk_speed = I2C_FREQ_HZ, 
     };
 
-    i2c_param_config(I2C_Port, &conf);
+    esp_err_t err = i2c_param_config(I2C_Port, &conf);
+    if (err != ESP_OK) {
+        ESP_LOGE("", "I2C param config failed: %s", esp_err_to_name(err));
+        return err;
+    }
 
-    return i2c_driver_install(I2C_Port, conf.mode, 0, 0, 0);
+    err = i2c_driver_install(I2C_Port, conf.mode, 0, 0, 0);
+    if (err != ESP_OK) {
+        ESP_LOGE("", "I2C driver install failed: %s", esp_err_to_name(err));
+    }
+
+    return err;
 }
 
 void i2c_scan(int SDA, int SCL, int I2C_Port){
