@@ -9,5 +9,5 @@
 
 
 void ei2c_scan(int SDA, int SCL, int I2C_Port);
+esp_err_t ei2c_write(i2c_port_t I2C_PORT, uint8_t ADDRESS, uint8_t *data, unsigned len);
 esp_err_t ei2c_master_init(int SDA, int SCL, int I2C_Port);
-esp_err_t ei2c_write(i2c_port_t I2C_PORT, uint8_t ADDRESS, uint8_t data_t, unsigned len);
