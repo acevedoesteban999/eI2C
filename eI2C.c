@@ -72,7 +72,7 @@ esp_err_t ei2c_write(i2c_port_t I2C_PORT, uint8_t ADDRESS ,uint8_t data_t ,unsig
     if(!ei2c_has_error()){
         esp_err_t err;
         for (int i = 0; i < MAX_TRY; i++) {
-            err = i2c_master_write_to_device(I2C_PORT, ADDRESS, data_t, 4, MAX_TIKS_WAIT);
+            err = i2c_master_write_to_device(I2C_PORT, ADDRESS, data_t, len, MAX_TIKS_WAIT);
             if (err == ESP_OK) break;
             vTaskDelay(pdMS_TO_TICKS(MAX_DELAY_TRY)); 
         }
