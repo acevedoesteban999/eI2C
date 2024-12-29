@@ -1,8 +1,13 @@
 #include "eI2C.h"
 
+int error_ei2c = -1;
 
 
-esp_err_t i2c_master_init(int SDA, int SCL, int I2C_Port)
+bool ei2c_has_error(){
+    return error_ei2c != 0;
+}
+
+esp_err_t ei2c_master_init(int SDA, int SCL, int I2C_Port)
 {
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
@@ -14,20 +19,19 @@ esp_err_t i2c_master_init(int SDA, int SCL, int I2C_Port)
     };
 
     esp_err_t err = i2c_param_config(I2C_Port, &conf);
-    if (err != ESP_OK) {
+    if (err != ESP_OK)
         ESP_LOGE("", "I2C param config failed: %s", esp_err_to_name(err));
-        return err;
+    else{
+        err = i2c_driver_install(I2C_Port, conf.mode, 0, 0, 0);
+        if (err != ESP_OK)
+            ESP_LOGE("", "I2C driver install failed: %s", esp_err_to_name(err));
     }
 
-    err = i2c_driver_install(I2C_Port, conf.mode, 0, 0, 0);
-    if (err != ESP_OK) {
-        ESP_LOGE("", "I2C driver install failed: %s", esp_err_to_name(err));
-    }
-
+    error_ei2c = err;
     return err;
 }
 
-void i2c_scan(int SDA, int SCL, int I2C_Port){
+void ei2c_scan(int SDA, int SCL, int I2C_Port){
     i2c_config_t conf = {
         .mode = I2C_MODE_MASTER,
         .sda_io_num = SDA,
@@ -62,4 +66,18 @@ void i2c_scan(int SDA, int SCL, int I2C_Port){
 
     ESP_LOGI("", "I2C scan completed.");
 
+}
+
+esp_err_t ei2c_write(i2c_port_t I2C_PORT, uint8_t ADDRESS ,uint8_t * data ,unsigned len){
+    if(!ei2c_has_error()){
+        esp_err_t err;
+        for (int i = 0; i < MAX_TRY; i++) {
+            err = i2c_master_write_to_device(I2C_PORT, ADDRESS, data, len, MAX_TIKS_WAIT);
+            if (err == ESP_OK) break;
+            vTaskDelay(pdMS_TO_TICKS(MAX_DELAY_TRY)); 
+        }
+        vTaskDelay(pdMS_TO_TICKS(2)); 
+        return err;
+    }
+    return error_ei2c;
 }
