@@ -1,11 +1,5 @@
 #include "eI2C.h"
 
-int error_ei2c = -1;
-
-
-bool ei2c_has_error(){
-    return error_ei2c != 0;
-}
 
 esp_err_t ei2c_master_init(int SDA, int SCL, int I2C_Port)
 {
@@ -27,7 +21,6 @@ esp_err_t ei2c_master_init(int SDA, int SCL, int I2C_Port)
             ESP_LOGE("", "I2C driver install failed: %s", esp_err_to_name(err));
     }
 
-    error_ei2c = err;
     return err;
 }
 
@@ -69,15 +62,13 @@ void ei2c_scan(int SDA, int SCL, int I2C_Port){
 }
 
 esp_err_t ei2c_write(i2c_port_t I2C_PORT, uint8_t ADDRESS ,uint8_t * data ,unsigned len){
-    if(!ei2c_has_error()){
-        esp_err_t err;
-        for (int i = 0; i < MAX_TRY; i++) {
-            err = i2c_master_write_to_device(I2C_PORT, ADDRESS, data, len, MAX_TIKS_WAIT);
-            if (err == ESP_OK) break;
-            vTaskDelay(pdMS_TO_TICKS(MAX_DELAY_TRY)); 
-        }
-        vTaskDelay(pdMS_TO_TICKS(2)); 
-        return err;
+    
+    esp_err_t err;
+    for (int i = 0; i < MAX_TRY; i++) {
+        err = i2c_master_write_to_device(I2C_PORT, ADDRESS, data, len, MAX_TIKS_WAIT);
+        if (err == ESP_OK) break;
+        vTaskDelay(pdMS_TO_TICKS(MAX_DELAY_TRY)); 
     }
-    return error_ei2c;
+    vTaskDelay(pdMS_TO_TICKS(2)); 
+    return err;
 }
