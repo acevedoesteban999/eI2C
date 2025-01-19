@@ -1,27 +1,49 @@
 #include "eI2C.h"
 
-
-esp_err_t ei2c_master_init(int SDA, int SCL, int I2C_Port)
+int error_ei2c = -1;
+bool ei2c_active = false;
+ei2c_gpio EI2C_GPIO = EI2C_DEFAULT_GPIO;
+esp_err_t ei2c_master_init()
 {
-    i2c_config_t conf = {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = SDA,  
-        .scl_io_num = SCL,  
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = I2C_FREQ_HZ, 
-    };
+    if(ei2c_has_error()){
+        i2c_config_t conf = {
+            .mode = I2C_MODE_MASTER,
+            .sda_io_num = EI2C_GPIO.SDA,  
+            .scl_io_num = EI2C_GPIO.SCL,  
+            .sda_pullup_en = GPIO_PULLUP_ENABLE,
+            .scl_pullup_en = GPIO_PULLUP_ENABLE,
+            .master.clk_speed = I2C_FREQ_HZ, 
+        };
 
-    esp_err_t err = i2c_param_config(I2C_Port, &conf);
-    if (err != ESP_OK)
-        ESP_LOGE("", "I2C param config failed: %s", esp_err_to_name(err));
-    else{
-        err = i2c_driver_install(I2C_Port, conf.mode, 0, 0, 0);
-        if (err != ESP_OK)
-            ESP_LOGE("", "I2C driver install failed: %s", esp_err_to_name(err));
+        esp_err_t err = i2c_param_config(EI2C_GPIO.PORT, &conf);
+        if (err != ESP_OK){
+            error_ei2c = 1;
+            ESP_LOGE("", "I2C param config failed: %s", esp_err_to_name(err));
+        }
+        else{
+            err = i2c_driver_install(EI2C_GPIO.PORT, conf.mode, 0, 0, 0);
+            if (err != ESP_OK)
+            {
+                error_ei2c = 2;
+                ESP_LOGE("", "I2C driver install failed: %s", esp_err_to_name(err));
+            }
+            else{
+
+                error_ei2c = 0;
+                ESP_LOGI("", "eI2C INIT SDA: %u  SCL: %u", EI2C_GPIO.SDA,EI2C_GPIO.SCL);
+            }
+                
+        }
+        return err;
     }
+    ESP_LOGI("", "eI2C enable yet: SDA: %u  SCL: %u", EI2C_GPIO.SDA,EI2C_GPIO.SCL);
+    return ESP_OK;
+}
 
-    return err;
+
+
+bool ei2c_has_error(){
+    return error_ei2c != 0;
 }
 
 void ei2c_scan(int SDA, int SCL, int I2C_Port){
@@ -47,7 +69,7 @@ void ei2c_scan(int SDA, int SCL, int I2C_Port){
         i2c_master_write_byte(cmd, (i << 1) | I2C_MASTER_WRITE, true);
         i2c_master_stop(cmd);
         
-        err = i2c_master_cmd_begin(I2C_NUM_0, cmd, pdMS_TO_TICKS(1000));
+        err = i2c_master_cmd_begin(EI2C_GPIO.PORT, cmd, pdMS_TO_TICKS(1000));
         i2c_cmd_link_delete(cmd);
 
         if (err == ESP_OK) {
@@ -61,14 +83,19 @@ void ei2c_scan(int SDA, int SCL, int I2C_Port){
 
 }
 
-esp_err_t ei2c_write(i2c_port_t I2C_PORT, uint8_t ADDRESS ,uint8_t * data ,unsigned len){
-    
+esp_err_t ei2c_write(uint8_t ADDRESS ,uint8_t * data ,unsigned len){
     esp_err_t err;
     for (int i = 0; i < MAX_TRY; i++) {
-        err = i2c_master_write_to_device(I2C_PORT, ADDRESS, data, len, MAX_TIKS_WAIT);
+        err = i2c_master_write_to_device(EI2C_GPIO.PORT, ADDRESS, data, len, MAX_TIKS_WAIT);
         if (err == ESP_OK) break;
         vTaskDelay(pdMS_TO_TICKS(MAX_DELAY_TRY)); 
+        ESP_LOGE("","A");
     }
+    ESP_LOGE("","%u %i %i",ADDRESS,EI2C_GPIO.PORT,err);
     vTaskDelay(pdMS_TO_TICKS(2)); 
     return err;
+}
+
+void ei2c_set_gpio(ei2c_gpio gpio ){
+    EI2C_GPIO = gpio;
 }
