@@ -8,8 +8,8 @@
 #define MAX_DELAY_TRY 10
 
 #define EI2C_DEFAULT_GPIO (ei2c_gpio){ \
-    .SDA = 22, \
-    .SCL = 21, \
+    .SDA = 21, \
+    .SCL = 22, \
     .PORT = I2C_NUM_0  \
 }
 
