@@ -89,9 +89,7 @@ esp_err_t ei2c_write(uint8_t ADDRESS ,uint8_t * data ,unsigned len){
         err = i2c_master_write_to_device(EI2C_GPIO.PORT, ADDRESS, data, len, MAX_TIKS_WAIT);
         if (err == ESP_OK) break;
         vTaskDelay(pdMS_TO_TICKS(MAX_DELAY_TRY)); 
-        ESP_LOGE("","A");
     }
-    ESP_LOGE("","%u %i %i",ADDRESS,EI2C_GPIO.PORT,err);
     vTaskDelay(pdMS_TO_TICKS(2)); 
     return err;
 }
