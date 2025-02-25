@@ -10,7 +10,7 @@
 #define EI2C_DEFAULT_GPIO (ei2c_gpio){ \
     .SDA = 21, \
     .SCL = 22, \
-    .PORT = I2C_NUM_0  \
+    .PORT = I2C_NUM_1  \
 }
 
 typedef struct{
