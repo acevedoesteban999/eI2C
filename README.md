@@ -21,10 +21,10 @@ The eI2C module is an implementation of I2C communication for the ESP32. This mo
 
 void app_main() {
     // Initialize the I2C bus
-    ei2c_master_init(GPIO_NUM_21, GPIO_NUM_22, I2C_NUM_0);
+    ei2c_master_init(GPIO_NUM_21, GPIO_NUM, I2C_NUM_0);
 
     // Scan for I2C devices
-    ei2c_scan(GPIO_NUM_21, GPIO_NUM_22, I2C_NUM_0);
+    ei2c_scan(GPIO_NUM_21, GPIO_NUM, I2C_NUM_0);
 
     // I2C device address
     uint8_t device_address = 0x40;
